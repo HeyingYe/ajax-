@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+
+        ul, li {
+            list-style: none;
+        }
+
+        #box {
+            width: 500px;
+            height: 550px;
+            border: 3px solid #ccc;
+            margin: 10px auto;
+            padding: 10px;
+        }
+
+        #list {
+            width: 480px;
+            height: 430px;
+            border: 1px dashed #ccc;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        #text {
+            width: 500px;
+            height: 50px;
+            border: 1px solid orange;
+            margin-top: 10px;
+        }
+
+        #send {
+            width: 60px;
+            height: 30px;
+            float: right;
+        }
+
+        #list li span{
+            display: inline-block;
+            height: 30px;
+            line-height: 30px;
+            background: #99f;
+            padding: 0 5px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+    </style>
+    <script src="js/AjaxBase.js"></script>
+    <script>
+    //页面功能
+    //1 周期性的获取聊天纪录 并刷新页面
+    //2 发送当前的聊天信息至服务器
+    //使用计时器周期性的获取服务器聊天纪录
+    onload = function(){
+        var oBtn = document.getElementById('send'),
+            oList = document.getElementById('list'),
+            oText = document.getElementById('text');
+        setInterval(function(){
+            //周期性的发送请求
+            var xhr = createXHR();
+            xhr.open('GET','http://localhost/jjk/chat/php/chat.php?type=query',true);
+            xhr.onreadystatechange = function(){
+                if(xhr.readyState ==4 &&xhr.status==200){
+                    //得到返回数据
+                    var oJson = JSON.parse(xhr.responseText);
+                    if(oJson.status==1){
+                        //数据返回成功//刷新页面
+                        update(oJson.data);
+                    }else{
+                        alert(oJson.status + oJson.msg);
+                    }
+
+                }
+            }
+            xhr.send(null);
+        },500)
+
+        function update(data){
+            //清空列表
+            oList.innerHTML = "";
+            //通过data刷新所有的聊天纪录
+            for(var i = 0;i<data.length;i++){
+               // data[i] 遍历到的每一个元素 {content：content，name：name}
+                var oLi = document.createElement('li'); //创建li
+                var oSpan = document.createElement('span');//创建liSpan
+                oSpan.innerHTML ='['+data[i].name+']:'+data[i].content;
+                oLi.appendChild(oSpan);
+                oList.appendChild(oLi);
+            }
+        }
+        var name  = prompt('请输入你的姓名','youke');
+        oBtn.onclick = function(){
+            //点击发送新的聊天纪录
+            var msg = oText.value;
+            //ajax请求
+            var xhr = createXHR();
+            //一般情况下会对请求数据进行编码encodeURIComponent
+            xhr.open('GET','http://localhost/jjk/chat/php/chat.php?type=send&username='+encodeURIComponent(name)+'&content='+encodeURIComponent(msg),true);
+            xhr.onreadystatechange = function(){
+                 if(xhr.readyState ==4 &&xhr.status==200){
+                    console.log(xhr.responseText);
+                 }
+            }
+            xhr.send(null);
+            oText.value = "";
+        }
+    }
+    </script>
+
+</head>
+<body>
+<div id="box">
+    <ul id="list">
+        <li>
+            <span>[张三]:你好</span>
+        </li>
+        <li>
+            <span>[李四]:你也好</span>
+        </li>
+    </ul>
+    <textarea id="text"></textarea>
+    <input id="send" type="button" value="发送" />
+</div>
+</body>
+</html>
